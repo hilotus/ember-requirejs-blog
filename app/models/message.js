@@ -1,12 +1,6 @@
-define(["ember", "ember-data", "app/mixins/moment_format"], 
-  function(Ember, DS, MomentFormat){
-  return DS.Model.extend(MomentFormat, {
+define(["ember", "ember-data", "app/models/model"], function(Ember, DS, FBModel){
+  return FBModel.extend({
     body: DS.attr('string'),
-
-    created: DS.attr('date'),
-    updated: DS.attr('date'),
-    creator: DS.belongsTo('user'),
-    updater: DS.belongsTo('user'),
 
     // 是否为登录用户创建
     isMe: function() {

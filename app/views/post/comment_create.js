@@ -1,10 +1,10 @@
-define(["ember", "text!app/templates/post/comment_create.hbs", "app/helpers/alert", "app/helpers/utilities"], 
-  function(Ember, CommentCreateHBS, Alert, Utilities){
+define(["ember", "text!app/templates/post/comment_create.hbs", "app/helpers/alert", "app/helpers/utilities", 
+  "app/helpers/persistence"], function(Ember, CommentCreateHBS, Alert, Utilities, Persistence){
   var CommnetCreateView = Ember.View.extend({
     classNames: ['comment-create'],
     template: Ember.Handlebars.compile(CommentCreateHBS),
 
-    postId: null,
+    post: null,
     currentUser: null,
 
     body: "",
@@ -13,41 +13,37 @@ define(["ember", "text!app/templates/post/comment_create.hbs", "app/helpers/aler
     creator_url: "",
     creator_ip: "",
 
+    creatingIn: false,
+    createDisabled: function() {
+      if (!this.get('currentUser') && !Utilities.emailValid(this.get('creator_email'))) {
+        return true
+      }
+      return this.get('creatingIn') || this.blank('body');
+    }.property('body', 'currentUser', 'creator_email', 'creatingIn'),
+
+    showSpinner: function() {
+      return this.get('creatingIn');
+    }.property('creatingIn'),
+
     actions: {
       createComment: function() {
-        if (this.blank("body")) {
-          Alert.warn(Ember.I18n.t("post.comment.create.error"), Ember.I18n.t("post.comment.create.error.nocontent"))
-          return
-        }
-        if (!this.currentUser && (this.blank("creator_email") || !Utilities.emailValid(this.get('creator_email')))) {
-          Alert.warn(Ember.I18n.t("post.comment.create.error"), Ember.I18n.t("post.comment.create.error.email"))
-          return
-        }
-
-        var data = {
-          id: Utilities.UUID(),
-          post: this.get("postId"),
+        var view = this, data = {
+          post: this.get("post.id"),
           body: this.get("body"),
-          creator_name: this.get("creator_name"),
-          creator_email: this.get("creator_email"),
+          creator_name: this.get("creator_name") || this.get("currentUser.name"),
+          creator_email: this.get("creator_email") || this.get("currentUser.email"),
           creator_url: this.get("creator_url"),
           creator_ip: this.get("creator_ip"),
-          creator: this.get("currentUser.id") || "",
-          updater: this.get("currentUser.id") || "",
+          creator: this.get("currentUser.id"),
         }, store = this.container.lookup('store:main');
 
-        this.set("body", "")
-        this.set("creator_email", "")
-
-        Utilities.ajax({url: "comment", type: "POST", data: data}).then(function(result){
-          if (result.errors) {
-            Alert.error(Ember.I18n.t("post.comment.create.error"), result.errors[0].errorMessage)
-          } else {
-            store.push('comment', result.comment)
-            store.pushPayload('post', result.post)
-          }
-        }, function(result){
-          Alert.error(Ember.I18n.t("post.comment.create.error"), result.statusText)
+        this.set('creatingIn', true);
+        Alert.operating(Ember.I18n.t("post.comment.creating"))
+        Persistence.createRecord(store, "comment", data, function(comment){
+          view.set('creatingIn', false)
+          view.set("body", "")
+          view.set("creator_email", "")
+          Alert.removeLoading()
         })
       }
     }

@@ -1,88 +1,93 @@
 define(["ember"], function(){
-    var CheckboxView = Ember.View.extend({
-        classNameBindings: [":checkbox", 'isEnabled:enabled:disabled', 'isActive:active', 'value:selected', 'isFocus:focus'],
-        isEnabled: true,
-        isActive: false,
-        isFocus: false,
-        value: false,
-        text: "保持我的登录状态",
+  var CheckboxView = Ember.View.extend({
+    classNameBindings: [":checkbox", 'isEnabled:enabled:disabled', 'isActive:active', 'value:selected', 'isFocus:focus'],
+    isEnabled: true,
+    isActive: false,
+    isFocus: false,
+    value: false,
+    text: "",
 
-        attributeBindings: ['tabindex'],
-        tabindex: "0",
+    attributeBindings: ['tabindex'],
+    tabindex: "0",
 
-        template: Ember.Handlebars.compile('<span class="box"></span><span class="label">{{view.text}}</span>'),
+    template: function() {
+      var html = '<span class="box">{{#if view.value}}<i class="fa fa-check-square-o"></i>' + 
+        '{{else}}<i class="fa fa-square-o"></i>{{/if}}</span><span class="label">{{view.text}}</span>';
 
-        toggleOnValue: true,
-        toggleOffValue: false,
-        _toggleValue: function(){
-            var isOn = this.get('value') === this.get('toggleOnValue');
-            this.set('value', isOn ? this.get('toggleOffValue') : this.get('toggleOnValue'));
-        },
+      return Ember.Handlebars.compile(html);
+    }.property(),
 
-        // 是否在控件内部摁下鼠标
-        _isMouseDown: false,
-        mouseDown: function(evt) {
-            if(!this.get('isEnabled')) return false;
-            this.set('isActive', true);
-            this._isMouseDown = true;
-            return true;
-        },
+    toggleOnValue: true,
+    toggleOffValue: false,
+    _toggleValue: function(){
+        var isOn = this.get('value') === this.get('toggleOnValue');
+        this.set('value', isOn ? this.get('toggleOffValue') : this.get('toggleOnValue'));
+    },
 
-        mouseUp: function(evt) {
-            if (!this.get('isEnabled')) return false;
-            this.set('isActive', false);
-            this._isMouseDown = false;
-            // this._toggleValue();
+    // 是否在控件内部摁下鼠标
+    _isMouseDown: false,
+    mouseDown: function(evt) {
+        if(!this.get('isEnabled')) return false;
+        this.set('isActive', true);
+        this._isMouseDown = true;
+        return true;
+    },
+
+    mouseUp: function(evt) {
+        if (!this.get('isEnabled')) return false;
+        this.set('isActive', false);
+        this._isMouseDown = false;
+        // this._toggleValue();
+        // fire action
+        // this._action(evt);
+        return true;
+    },
+
+    click: function(evt) {
+        if (!this.get('isEnabled')) return false;
+        this._toggleValue();
+        return true;
+    },
+
+    focusIn: function(evt) {
+        if (!this._isMouseDown) {
+            this.set('isFocus', true);
+        }
+    },
+
+    focusOut: function(evt) {
+        this.set('isFocus', false);
+    },
+
+    keyDown: function(evt) {
+        if(!this.get('isEnabled')) return true;
+
+        if (evt.which === 13 || evt.which === 32) {
+            this._toggleValue();
             // fire action
             // this._action(evt);
-            return true;
-        },
-
-        click: function(evt) {
-            if (!this.get('isEnabled')) return false;
-            this._toggleValue();
-            return true;
-        },
-
-        focusIn: function(evt) {
-            if (!this._isMouseDown) {
-                this.set('isFocus', true);
-            }
-        },
-
-        focusOut: function(evt) {
-            this.set('isFocus', false);
-        },
-
-        keyDown: function(evt) {
-            if(!this.get('isEnabled')) return true;
-
-            if (evt.which === 13 || evt.which === 32) {
-                this._toggleValue();
-                // fire action
-                // this._action(evt);
-                return true ; // handled
-            }
-            return false;
-        },
-
-        didInsertElement: function() {
-            var that = this, $elem = this.$();
-            // 加上这个的原因是，点击鼠标，不释放，当拖到该元素范围外面在释放不会触发该元素的mouseup事件，但会触发document的mouseup事件。
-            $(document).bind('mouseup', function(evt){
-                var parent = $(evt.target).parents('div.checkbox');
-                // 判断点击的是否为picker控件内部元素
-                if (parent.attr('id') != $elem.attr('id')) {
-                    if (!that._isMouseDown) return true;
-                    if(!that.get('isEnabled')) return true;
-                    that.set('isActive', false);
-                    that._isMouseDown = false;
-                }
-                return true;
-            })
+            return true ; // handled
         }
-    })
+        return false;
+    },
 
-    Ember.Handlebars.helper('checkbox', CheckboxView)
+    didInsertElement: function() {
+      var that = this, $elem = this.$();
+      // 加上这个的原因是，点击鼠标，不释放，当拖到该元素范围外面在释放不会触发该元素的mouseup事件，但会触发document的mouseup事件。
+      $(document).bind('mouseup', function(evt){
+        var parent = $(evt.target).parents('div.checkbox');
+        // 判断点击的是否为picker控件内部元素
+        if (parent.attr('id') != $elem.attr('id')) {
+          if (!that._isMouseDown) return true;
+          if(!that.get('isEnabled')) return true;
+          that.set('isActive', false);
+          that._isMouseDown = false;
+        }
+        return true;
+      })
+    }
+  })
+
+  Ember.Handlebars.helper('checkbox', CheckboxView)
 })
 

@@ -36,19 +36,13 @@ define(["ember", "text!app/templates/post/comment_list_item.hbs", "app/helpers/a
           var comment = this.get('content'), store = this.container.lookup('store:main');
 
           Alert.warn(Ember.I18n.t("post.comment.delete.confirm"), "", [
-            Ember.I18n.t("button.cancel"), 
+            Ember.I18n.t("button.cancel"),
             Ember.I18n.t("button.delete")
-          ], function(index) {
-            if (index == 2) {  // 删除
-              Utilities.ajax({url: "comment/%@".fmt(comment.get("id")), type: "DELETE"}).then(function(result){
-                if (result.errors) {
-                  Alert.error(Ember.I18n.t("post.comment.delete.error"), result.errors[0].errorMessage)
-                } else {
-                  store.unloadRecord(comment)
-                  store.pushPayload('post', result.post)
-                }
-              }, function(result){
-                Alert.error(Ember.I18n.t("post.comment.delete.error"), result.statusText)
+          ], function(i) {
+            if (i == 2) {  // 删除
+              Alert.operating(Ember.I18n.t("post.comment.deleting"))
+              Persistence.deleteRecord(store, "comment", comment, function(result){
+                Alert.removeLoading();
               })
             }
           })
@@ -62,9 +56,8 @@ define(["ember", "text!app/templates/post/comment_list_item.hbs", "app/helpers/a
           var comment = this.get('content'), store = this.container.lookup('store:main'), view = this;
 
           if (!Ember.isEmpty(this.get('buffered').trim()) && comment.get('body') != this.get('buffered')) {
-            var data = {
-              body: this.get('buffered')
-            }
+            comment.set('body', this.get('buffered'))
+            var data = { body: this.get('buffered') }
             var onSuccess = function() { view.didSave() }
             Persistence.updateRecord(store, 'comment', comment, data, onSuccess)
           } else {
@@ -81,3 +74,4 @@ define(["ember", "text!app/templates/post/comment_list_item.hbs", "app/helpers/a
 
   Ember.Handlebars.helper('comment-list', CommnetListView)
 })
+

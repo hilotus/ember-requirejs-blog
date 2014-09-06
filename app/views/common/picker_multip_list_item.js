@@ -23,9 +23,9 @@ define(["ember", "app/views/common/checkbox"], function(Ember){
     },
 
     /*
-        复选框是否选中
-        k: value
-        v: undefined, true, false
+      复选框是否选中
+      k: value
+      v: undefined, true, false
     */
     value: function(k, v) {
       if (v == undefined) {
@@ -50,7 +50,7 @@ define(["ember", "app/views/common/checkbox"], function(Ember){
     didInsertElement: function() {
       var self = this;
       /*
-          TODO: 初始化已选中标签，目前使用延迟500毫秒处理
+        TODO: 初始化已选中标签，目前使用延迟500毫秒处理
       */
       Ember.run.later(function(){
         var selection = self.get("parentView.selection"), content = self.get("content");

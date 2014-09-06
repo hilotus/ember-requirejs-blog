@@ -24,7 +24,8 @@ define([
     "app/models/comment",
     "app/models/message",
 
-    "app/models/transforms/array",
+    // "app/models/transforms/array",
+    "app/models/transforms/datetime",
 
     "app/controllers/notification_controller",
 
@@ -68,7 +69,7 @@ define([
 
     ModalView, ModalBodyView, LoginView, CreateAccountView, ForgotView, ResetView,
     Store, User, Post, Term, Comment, Message,
-    ArrayTransform,
+    DatetimeTransform,
     NotificationController,
     PostsController, PostsNewController, PostController, CommentsController, 
     AdminController, AdminNavigationController, 
@@ -106,7 +107,7 @@ define([
         Comment: Comment,
         Message: Message,
 
-        ArrayTransform: ArrayTransform,
+        DatetimeTransform: DatetimeTransform,
 
         NotificationController: NotificationController,
 

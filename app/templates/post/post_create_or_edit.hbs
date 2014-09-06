@@ -1,18 +1,28 @@
-<div class="content-subhead">
-  <div class="pure-u-1">{{headerTitle}}</div>
-</div>
-<div class="pure-form pure-form-stacked">
-  <fieldset>
-    {{input type="text" class="pure-input-1" placeholderTranslation="posts.create.input.title" value=model.title}}
-    {{select-picker content=tags selection=model.tags promptTranslation="blog.tag" isMultiple=true}}
-    {{select-picker content=categories selection=model.category promptTranslation="blog.category"}}
-  </fieldset>
-  <fieldset>
-    {{textarea elementId="postEditorBody" value=model.body class="pure-input-1 post-edit-body" placeholderTranslation="blog.posts.body"}}
-    {{!--sceditor-textarea value=model.body relativeController=this--}}
-  </fieldset>
-  <fieldset>
-    <button {{action 'createOrEdit'}} class="pure-button pure-button-primary">{{createOrEditTitle}}</button>
-    <button {{action 'cancel'}} class="pure-button">{{t button.cancel}}</button>
-  </fieldset>
-</div>
+{{#if model}}
+  <div class="content-subhead">
+    <div class="pure-u-1">{{headerTitle}}</div>
+  </div>
+  <div class="pure-form pure-form-stacked">
+    <fieldset>
+      {{input type="text" class="pure-input-1" placeholderTranslation="posts.create.input.title" value=model.title}}
+      {{select-picker content=tags selection=model.tags promptTranslation="blog.tag" isMultiple=true}}
+      {{select-picker content=categories selection=model.category promptTranslation="blog.category"}}
+    </fieldset>
+    <fieldset>
+      {{!--textarea elementId="postEditorBody" value=model.body class="pure-input-1 post-edit-body" placeholderTranslation="blog.posts.body"--}}
+      {{sceditor-textarea value=model.body relativeController=this}}
+    </fieldset>
+    <fieldset>
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <button {{action 'createOrEdit'}} class="pure-button pure-button-primary" {{bind-attr disabled="creatingIn"}}>{{createOrEditTitle}}</button>
+          {{#if showSpinner}}
+            &nbsp; <i class='fa fa-spinner fa-spin'></i>
+          {{else}}
+            <button {{action 'cancel'}} class="pure-button">{{t button.cancel}}</button>
+          {{/if}}
+        </div>
+      <div>
+    </fieldset>
+  </div>
+{{/if}}

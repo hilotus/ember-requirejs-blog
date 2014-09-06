@@ -33,9 +33,9 @@ define(["ember", "text!app/templates/common/select-picker.hbs", "app/extensions/
     isActiveChanged: function() {
       var isActive = this.get('isActive'), drop = this.$('div.picker-drop');
       if (!isActive) {
-        drop.css({top: "20px", visibility: "hidden", opacity: 0})
+        drop.css({left: "-10000px"})
       } else {
-        drop.css({top: "30px", visibility: "visible", opacity: 1})
+        drop.css({left: "0px"})
       }
     }.observes('isActive'),
 
