@@ -1,8 +1,10 @@
-define(["app/routes/route"], function(Route){
+define(["app/routes/route", "app/helpers/utilities"], function(Route, Utilities){
   return Route.extend({
     renderTemplate: function() {
+      this._super();
+      var email = Utilities.gup(window.location.href, "email");
       Route.showModal(this, 'reset');
-      this.controllerFor('reset').resetForm();
+      this.controllerFor('reset').resetForm(email);
     },
 
     actions: {

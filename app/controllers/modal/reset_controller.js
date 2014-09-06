@@ -2,14 +2,16 @@ define(["ember", "app/mixins/modal_functionality", "app/mixins/presence", "app/h
         "app/controllers/modal/modal_controller", "i18n"
     ], function(Ember, ModalFunctionality, Presence, Utilities){
     return Ember.Controller.extend(ModalFunctionality, Presence, {
+        email: '',
         password: '',
         passwordConfirm: '',
         resetting: false,
         complete: false,
 
-        resetForm: function() {
-            this.set('password', '')
-            this.set('passwordConfirm', '')
+        resetForm: function(email) {
+            this.set('email', email);
+            this.set('password', '');
+            this.set('passwordConfirm', '');
             this.set('resetting', false);
             this.set('complete', false);
         },
@@ -33,7 +35,7 @@ define(["ember", "app/mixins/modal_functionality", "app/mixins/presence", "app/h
                     return
                 }
 
-                var email = Utilities.gup(window.location.href.toString(), "email");
+                var email = this.get('email');
                 if (!email) {
                     this.flash(Ember.I18n.t('reset.email.empty'), 'error');
                     return
