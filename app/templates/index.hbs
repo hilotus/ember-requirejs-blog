@@ -1,0 +1,14 @@
+<div class="content-subhead">
+    <div class="pure-g">
+        <div class="pure-u-1-5">{{t blog.home}}</div>
+        <div class="pure-u-4-5 horizontal-right">
+            {{#if currentUser}}
+                {{#link-to "posts.new" class="pure-button pure-button-primary"}}{{t posts.create}}{{/link-to}}
+            {{/if}}
+        </div>
+    </div>
+</div>
+<div class="content-contents">
+    {{slideshow}}
+</div>
+

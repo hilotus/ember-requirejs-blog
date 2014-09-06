@@ -1,0 +1,23 @@
+<header class="post-header">
+    <h2 class="post-title">
+        <div class="post-title-label">{{#link-to "post" view.content}} {{view.content.title}} {{/link-to}}</div>
+        <span class="comments-count">{{view.content.comment_count}}</span>
+        <img class="post-avatar" height="48" width="48" {{bind-attr src=view.content.creator.avatarPhoto}}>
+    </h2>
+    <p class="post-meta">
+        {{view.content.format_created}}
+        <span class="divider"></span>
+        {{t blog.author}}<span class="colon"></span>
+        {{view.content.creator.name}}
+        <span class="divider"></span>
+        {{t blog.category}}<span class="colon"></span>
+        {{post-category category=view.content.category}}
+        {{#if view.content.isMe}}
+            <span class="divider"></span>
+            <a href="javascript:void(0);" class="post-edit" {{action edit view.content}}>{{t button.edit}}</a>
+            <span class="divider"></span>
+            <a href="javascript:void(0);" class="post-delete" {{action delete view.content}}>{{t button.delete}}</a>
+        {{/if}}
+    </p>
+</header>
+{{post-body body=view.content.body isShowAll=false}}

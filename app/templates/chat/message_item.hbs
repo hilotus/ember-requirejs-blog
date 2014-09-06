@@ -1,0 +1,20 @@
+<div class="pure-g">
+  <div class="pure-u-1">
+    <div class="message-title">
+      {{#if view.content.isMe}}
+        <span>{{view.content.format_created}}</span>
+        <span>&nbsp;&nbsp;{{view.content.creator.name}}</span>
+      {{else}}
+        <span>{{view.content.creator.name}}</span>
+        <span>&nbsp;&nbsp;{{view.content.format_created}}</span>
+      {{/if}}
+    </div>
+  </div>
+  <div class="pure-u-1">
+    <div class="message-item">
+      <div class="arrow"></div>
+      <img class="avatar" {{bind-attr src=view.content.creator.avatarPhoto}}>
+      {{view.content.body}}
+    </div>
+  </div>
+</div>
