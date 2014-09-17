@@ -1,0 +1,157 @@
+@keyframes show-message-is-not-me {
+  0% {
+    margin-left: -480px;
+  }
+
+  100% {
+    margin-left: 0;
+  }
+}
+@-moz-keyframes show-message-is-not-me {
+  0% {
+    margin-left: -480px;
+  }
+
+  100% {
+    margin-left: 0;
+  }
+}
+@-webkit-keyframes show-message-is-not-me {
+  0% {
+    margin-left: -480px;
+  }
+
+  100% {
+    margin-left: 0;
+  }
+}
+@keyframes show-message-is-me {
+  0% {
+    margin-right: -480px;
+  }
+
+  100% {
+    margin-right: 0;
+  }
+}
+@-moz-keyframes show-message-is-me {
+  0% {
+    margin-right: -480px;
+  }
+
+  100% {
+    margin-right: 0;
+  }
+}
+@-webkit-keyframes show-message-is-me {
+  0% {
+    margin-right: -480px;
+  }
+
+  100% {
+    margin-right: 0;
+  }
+}
+
+.chat-thread {
+  margin: 24px auto 0 auto;
+  padding: 0 20px 0 0;
+  list-style: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  li {
+    .message-title {
+      font-size: 12px;
+    }
+
+    .message-item {
+      position: relative;
+      clear: both;
+      display: inline-block;
+      padding: 16px 40px 16px 20px;
+      margin: 5px 0 20px 0;
+      font-size: 16px/20px;
+      border-radius: 10px;
+      background-color: rgba(25, 147, 147, 0.2);
+
+      max-width: 70%;
+      word-wrap: break-word;
+      word-break: normal;
+
+      /* Chat - Avatar */
+      .avatar {
+        position: absolute;
+        top: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 50px;
+        display: block;
+      }
+
+      /* Chat - Speech Bubble Arrow */
+      .arrow {
+        position: absolute;
+        top: 15px;
+        width: 0;
+        height: 0;
+        border-top: 15px solid rgba(25, 147, 147, 0.2);
+      }
+    }
+
+    &.is-me {
+      .message-title {
+        color: #0AD5C1;
+        text-align: right;
+      }
+
+      .message-item {
+        animation: show-message-is-me 0.15s 1 ease-in;
+        -moz-animation: show-message-is-me 0.15s 1 ease-in;
+        -webkit-animation: show-message-is-me 0.15s 1 ease-in;
+        float: right;
+        margin-right: 80px;
+        color: #0AD5C1;
+
+        .avatar {
+          right: -80px;
+        }
+
+        .arrow {
+          border-right: 15px solid transparent;
+          right: -15px;
+        }
+      }
+    }
+
+    &.is-not-me {
+      .message-title {
+        color: #0EC879;
+        text-align: left;
+      }
+
+      .message-item {
+        animation: show-message-is-not-me 0.15s 1 ease-in;
+        -moz-animation: show-message-is-not-me 0.15s 1 ease-in;
+        -webkit-animation: show-message-is-not-me 0.15s 1 ease-in;
+        float: left;
+        margin-left: 80px;
+        color: #0EC879;
+
+        .avatar {
+          left: -80px;
+        }
+
+        .arrow {
+          border-left: 15px solid transparent;
+          left: -15px;
+        }
+      }
+    }
+  }
+}
+
+.message-create textarea {
+  resize: none;
+  height: 60px;
+}

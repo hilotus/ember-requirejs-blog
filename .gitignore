@@ -1,5 +1,3 @@
 .DS_Store
 .sass-cache
-scss
-config.rb
-*.txt
+note.txt
