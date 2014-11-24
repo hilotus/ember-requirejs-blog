@@ -1,0 +1,354 @@
+1. 创建有关联关系字段的记录时：
+
+// 有关联关系的字段赋值时，一定要使用想关联的对象，而不能是主键ID
+post = this.store.createRecord('post', {
+    id: Blog.UUID(),
+    title: title,
+    body: body,
+    // Blog.Term 对象
+    category: selectCategory,
+    // hasMany对象赋值时，先定义空数组，在使用pushObjects方法
+    tags: [],
+    creator: Blog.get('currentUser'),
+    updater: Blog.get('currentUser')
+});
+
+// relationship 相关字段赋值
+// store.find('user', '71c8662c-a839-e863-4abf-adad873179b6').then(function(user) {
+//     post.set('creator', user)
+//     post.set('updater', user)
+//     if (tag) post.get('tags').pushObjects(tag)
+//     post.save().then(onSuccess, onFail);
+// })
+
+/*
+ * 如果某个字段是relationship
+ * 比如tags，在创建时初始化为[]，重新赋值时，必需用以下的方法get().then()，
+ * 在then中进行赋值存储，否则会报错(The content property of DS.PromiseArray should be set before modifying it)。
+ * 
+ * 谨记，relationship字段的值一定是Record类型，如果不是，一定请在get后使用then重新赋值
+ * 参考：http://stackoverflow.com/questions/21529816/set-hasmany-array-during-record-creation
+ */
+post.get('tags').then(function(tags){
+    if (selectTags) tags.pushObjects(selectTags)
+    post.save().then(onSuccess, onFail);
+})
+
+
+
+// Route, 依次进入以下方法
+
+// 查询该route中的model(应用的数据)
+model: function() {
+  var controller = this.controllerFor('posts');
+  if (controller.get("page") == 1 && controller.get("page") != controller.get("pages") 
+    && (!controller.get("model") || controller.get("model.length") == 0)) {
+    Utilities.ajax({
+      url: 'posts?page=%@&per_page=%@'.fmt(controller.get("page"), controller.get("per_page")),
+      type: 'GET'
+    }).then(function(result){
+      
+    }, function(result){
+
+    })
+
+
+    return this.store.findQuery('post', {per_page: controller.get("per_page"), page: controller.get("page")})
+  } else {
+    return undefined
+  }
+},
+// 给要使用的controller的model赋值
+setupController: function(controller, model) {
+  /*
+    metadata的使用，请参考 http://emberjs.com/guides/models/handling-metadata/
+  */
+  var controller = this.controllerFor('posts');
+  if (model) {
+    var meta = this.store.metadataFor("post");
+    controller.set('model', model).set("pages", meta.pages)
+  }
+},
+// 使用哪一个controller来刷新template
+renderTemplate: function() {
+  // this.render({ controller: 'posts' });
+},
+
+// 离开文章列表route时做的处理
+actions: {
+  willTransition: function(transition) {
+    // 所以得使用一下方式取得postsController，再设值
+    this.controllerFor("posts").setProperties({
+      keywords: "",
+      hasDisplayAll: false
+    })
+  }
+}
+})
+
+
+
+
+/*
+    Push
+*/
+PUSH_RETRY_WAIT: 10,
+scheduleAttempt: function (functionName) {
+    var m = "_attemptCount_" + functionName, runLater = this[m];
+    if (!runLater) {
+        this[m] = runLater = 1
+    }
+    var l = "_attemptTimer_" + functionName, j = this[l];
+    if (j) {
+        Ember.warn("Utilities: There is already an attemptTimer for %@", functionName);
+        return
+    }
+
+    var h = this.get("PUSH_RETRY_WAIT"), utils = this;
+    Ember.debug("Utilities: Scheduling '%@' in %@ seconds".fmt(functionName, h));
+
+    this[l] = setTimeout(function() {
+        utils[l] = null;
+        utils[functionName]()
+    }, h * 1000);
+},
+
+hasPushConnection: false,
+parkConnection: function() {
+    if (this.get("hasPushConnection")) {
+        Ember.warn("We already have an established push connection");
+        return
+    }
+
+    var xhr = new XMLHttpRequest(), utils = this;
+    xhr.open("POST", this.get("baseServerPushUrl") + "?tok=" + this.UUID(), !0)
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    xhr.withCredentials = false;
+    xhr.timeout = 600 * 1000;
+
+    xhr.ontimeout = function() {
+        utils.set("hasPushConnection", false);
+        utils.scheduleAttempt("parkConnection");
+    }
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {  // success
+                Ember.debug("success: " + xhr.responseText)
+                utils.set("hasPushConnection", false);
+
+                var _timeout = setTimeout(function() {
+                    utils.parkConnection();
+                    clearTimeout(_timeout)
+                }, 500);
+            }
+          
+            if (xhr.status == 408) {
+                Ember.debug("409: Request Time-out")
+                utils.set("hasPushConnection", false);
+                utils.scheduleAttempt("parkConnection");
+            }
+
+            if (xhr.status == 409) {
+                Ember.debug("409: Re-parked multiple connections with the same pushToken")
+                utils.set("hasPushConnection", false);
+                utils.scheduleAttempt("parkConnection");
+            }
+
+            if (xhr.status == 403) {
+                Ember.debug("403: The pushToken has expired")
+                utils.set("hasPushConnection", false);
+                alert("APNS 403 response")
+            }
+
+            if (xhr.status == 0) {
+                Ember.debug("Unknown error: The park push connection closed unexpectedly")
+                utils.set("hasPushConnection", false);
+                utils.scheduleAttempt("parkConnection");
+            }
+        }
+    }
+    this.set("hasPushConnection", true);
+    xhr.send(null)
+}
+post '/webcourier' do 
+    push_token = params["tok"]
+    connections[push_token].close if connections[push_token]
+    connections.delete_if {|key, value| value.closed?}
+
+    stream :keep_open do |out|
+        connections[push_token] = out
+        # if messages[push_token] and !connections[push_token].closed
+        #     connections[push_token] << messages[push_token]
+        #     messages[push_token] = nil
+        #     connections[push_token].close
+        # end
+    end
+end
+
+post '/blog/message' do 
+    connections.each { |key, out| out <<  "{\"message\": \"#{params["msg"]}\"}"; out.close }
+    204 # response without entity body
+end
+
+
+
+
+/*
+  checkbox css
+*/
+.checkbox {
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    border: 0px none;
+    /*color: #1a1a1a;*/
+    margin-right: 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+    text-align: left;
+    height: 20px;
+
+    &.disabled {
+        cursor: default !important;
+        color: #dadada;
+    }
+
+    .label {
+        padding-left: 25px;
+        white-space: nowrap;
+        /*font-size: 17px;*/
+        line-height: 20px;
+        cursor: inherit;
+        /*灰色*/
+        /*color: #5c7883;*/
+    }
+
+    .box {
+        outline: none;
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        top: -1px;
+        cursor: inherit;
+        background-image: url(../../img/checkbox/ckb@normal.png);
+    }
+
+    &:focus {
+        .box {
+            outline: none;
+        }
+    }
+
+    &.active {
+        .box {
+            background-image: url(../../img/checkbox/ckb@active.png);
+        }
+    }
+
+    &.selected {
+        .box {
+            background-image: url(../../img/checkbox/ckb@selected.png);
+        }
+    }
+
+    &.focus {
+        .box {
+            background-image: url(../../img/checkbox/ckb@focus.png);
+        }
+    }
+
+    &.active.selected {
+        .box {
+            background-image: url(../../img/checkbox/ckb@active-selected.png);
+        }
+    }
+
+    &.active.focus {
+        .box {
+            background-image: url(../../img/checkbox/ckb@active-focus.png);
+        }
+    }
+
+    &.focus.selected {
+        .box {
+            background-image: url(../../img/checkbox/ckb@focus-selected.png);
+        }
+    }
+
+    &.active.selected.focus {
+        .box {
+            background-image: url(../../img/checkbox/ckb@active-focus-selected.png);
+        }
+    }
+}
+
+
+
+
+
+/*
+  nginx config
+*/
+upstream blog_foreverboy_net {
+  ip_hash;
+  server unix:/var/tmp/sockets/thin.0.sock max_fails=1 fail_timeout=15s;
+  server unix:/var/tmp/sockets/thin.1.sock max_fails=1 fail_timeout=15s;
+}
+
+server {
+  listen 80;
+  server_name blog.foreverboy.net;
+
+  root /Users/Shared/www/blog;
+
+  #access_log /var/log/nginx/access.log;
+  error_log /var/log/nginx/error.log;
+
+  #error_page 500 500.html;
+
+  location @blog_foreverboy_net {
+    index index.html;
+  }
+
+  location ~* \.(?:ico|css|js|gif|jpe?g|png)$ {
+    expires 30d;
+    add_header Vary Accept-Encoding;
+    access_log off;
+  }
+
+  location /account {
+    proxy_pass http://blog_foreverboy_net/account;
+    proxy_set_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
+
+    proxy_set_header HOST $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /blog {
+    proxy_pass http://blog_foreverboy_net/blog;
+    proxy_set_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
+
+    proxy_set_header HOST $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /webcourier {
+    proxy_pass http://blog_foreverboy_net/webcourier;
+    proxy_read_timeout 600;
+
+    proxy_set_header HOST $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+
+
+Markdown 网页编辑器
+Markdown 语法说明 http://wowubuntu.com/markdown/
+http://markdowntutorial.com/
+https://github.com/bhollis/maruku
+http://stackoverflow.com/questions/373002/better-ruby-markdown-interpreter
+
